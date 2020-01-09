@@ -1,0 +1,284 @@
+<!doctype html>
+<html>
+<head>
+<title>Infuriating Screensaver</title>
+<script type="text/javascript" src="tween.js"></script>
+<script type="text/javascript">
+
+app = {};
+app.objects = [];
+	
+var canvas;
+var ctx;
+
+var square = function(initObj){
+	var self = this;
+	self.vtx = [
+		[150,150],
+		[150,450],
+		[250,450],
+		[250,375],
+		[300,375],
+		[300,450],
+		[450,450],
+		[450,150],
+		[300,100],	
+	];
+	
+	this.draw = function(){
+		self = this;
+		
+		
+		
+		ctx.beginPath();
+		ctx.strokeStyle = 'rgba(255,0,0,50)';
+			
+		for(var i = 0; i < self.vtx.length; i++){
+			if(i === 0){
+				ctx.moveTo(self.vtx[i][0],self.vtx[i][1]);
+			} else {
+				ctx.lineTo(self.vtx[i][0],self.vtx[i][1]);
+			}
+		}
+		ctx.fill()			
+	}
+};
+
+app = {};
+app.objects = [];
+app.ray = false;
+app.turbo = false;
+
+objClass = function(o){
+	var self = this;
+	
+	self.x = o.x;
+	self.y = o.y;
+	self.w = o.w;
+	self.h = o.h;
+	self.yDir = 1;
+	self.xDir = 1;
+	self.fillStyle = o.fillStyle;
+	
+	self.xCenter = self.x + (self.w /2);
+	self.yCenter = self.y + (self.h /2);
+	
+	self.getX = function(){
+		if(typeof self.tweenX === 'undefined'){
+			return self.x;
+		} else {
+			return self.tweenX.getValue();
+		}
+	}
+	
+	self.getY = function(){
+		if(typeof self.tweenY === 'undefined'){
+			return self.y;
+		} else {
+			return self.tweenY.getValue();
+		}
+	}
+	
+	self.getH = function(){
+		if(typeof self.tweenH === 'undefined'){
+			return self.h;
+		} else {
+			return self.tweenH.getValue();
+		}
+	}
+	
+	self.getW = function(){
+		if(typeof self.tweenW === 'undefined'){
+			return self.w;
+		} else {
+			return self.tweenW.getValue();
+		}
+	}
+	
+	self.irritate = function(){
+		
+		
+		
+		var xCorner;
+		var yCorner;
+	
+		if(self.xDir == 1){
+			xCorner = canvas.width;
+		} else {
+			xCorner = 0;
+		}
+		
+		if(self.yDir == 1){
+			yCorner = canvas.height;
+		} else {
+			yCorner = 0;
+		}
+	
+		if(Math.abs(Math.abs(xCorner - self.xCenter) - Math.abs(yCorner - self.yCenter)) < 5){
+		console.log("Irritating " + Math.abs(xCorner - self.xCenter) + " " + Math.abs(yCorner - self.yCenter));
+		self.xDir = self.xDir * 0.99;
+		} else {
+		console.log("Irritating " + Math.abs(xCorner - self.xCenter) + " " + Math.abs(yCorner - self.yCenter));
+		}
+		
+	}
+	
+	self.draw = function(){
+		ctx.beginPath();
+		ctx.fillStyle = self.fillStyle;
+		
+		
+		speed = 2;
+		
+		if(app.turbo){
+			speed = 4;
+		}
+		
+		// Modify x and y here
+		self.x += self.xDir * speed;
+		self.y += self.yDir * speed;
+		
+		
+		self.xCenter = self.x + (self.w /2);
+		self.yCenter = self.y + (self.h /2);
+		
+		if(self.yDir > 0){
+			if(self.y + self.h >= canvas.height){
+			self.yDir = -1;
+			self.irritate();
+			}
+		} else {
+			if(self.y <= 0){
+			self.yDir = 1;
+			self.irritate();
+			}
+		}
+		
+		if(self.xDir > 0){
+			if(self.x + self.w >= canvas.width){
+				self.xDir = -1;
+				self.irritate();
+			}
+		} else {
+			if(self.x <= 0){
+				self.xDir = 1;
+				self.irritate();
+			}
+		}
+		
+		ctx.fillRect(self.getX(), self.getY(), self.getH(), self.getW());
+
+		ctx.closePath();
+		
+		// Cast a ray from middle of square to next bouce point
+		if(app.ray){
+			ctx.moveTo(self.x + (self.w / 2),self.y + (self.h / 2));
+			ctx.lineTo(self.xDir * canvas.lineMax + self.x + (self.w /2), self.yDir * canvas.lineMax + self.y + (self.h /2));
+			if(Math.abs(self.xDir) == 1){
+				ctx.strokeStyle = 'white';
+			} else {
+				ctx.strokeStyle = 'red';
+			}
+			ctx.stroke();
+			ctx.strokeStyle = 'black';
+		}
+	}
+	
+	
+	
+	
+	return self;
+}
+
+
+
+
+function toggleRay(e){
+	console.log("ray toggle");
+	if(e.key == 'r'){
+		app.ray = !app.ray;
+	}
+}
+
+function toggleTurbo(e){
+	console.log("turbo toggle");
+	if(e.key == 't'){
+		app.turbo = !app.turbo;
+	}
+}
+
+
+
+
+app.init = function(){
+	//alert("test");
+		
+	
+	canvas = document.getElementById("canvas1");
+	canvas.width = document.documentElement.clientWidth;
+	canvas.height = document.documentElement.clientHeight;
+	ctx = canvas.getContext("2d");
+	
+	document.addEventListener("keyup", function(e){
+		toggleRay(e);
+	});
+	
+	document.addEventListener("keyup", function(e){
+		toggleTurbo(e);
+	});
+
+	
+	console.log(canvas.width);
+	console.log(canvas.height);
+	
+	
+	canvas.lineMax = Math.sqrt(canvas.width ** 2 + canvas.height ** 2);
+	//canvas.lineMax = 200;
+	//ctx.fillRect(150,150,300,300);
+	
+	obj = new objClass({x: canvas.width-canvas.height-250+40, y: canvas.height - 250, h: 40, w: 40, fillStyle: "rgba(255,255,255,1)"});
+	app.objects.push(obj);
+	
+	
+	window.requestAnimationFrame(tick);
+
+}
+
+
+
+
+
+
+app.draw = function(){
+	ctx.clearRect(0,0,canvas.width,canvas.height);
+	
+	ctx.fillStyle = 'rgb(0,0,0)';
+	ctx.fillRect(0,0,canvas.width,canvas.height);
+	
+	for(var i = 0; i < app.objects.length; i++){
+		app.objects[i].draw();
+	}
+	
+}
+
+function tick(){
+	app.draw();
+	window.requestAnimationFrame(tick);
+}
+
+
+</script>
+<style>
+body {margin: 0px; overflow: hidden;}
+body,html {height:100%; width:100%;}
+#canvas1 {	}
+</style>
+</head>
+<body>
+<canvas id='canvas1'></canvas>
+<script type="text/javascript">
+app.init();
+</script>
+</body>
+</html>
+
